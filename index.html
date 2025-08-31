@@ -419,9 +419,6 @@
         </div>
     </div>
 
-    <!-- Include VAPI JS SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@vapi-ai/web@latest/dist/index.js"></script>
-
     <!-- VAPI Widget JavaScript -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
@@ -453,17 +450,28 @@
                 voiceStatus: document.getElementById('vapi-voice-status')
             };
 
-            // Wait for VAPI SDK to load
-            // Initialize VAPI voice after a short delay (matching Shopify version)
-            setTimeout(() => {
-                initializeVAPI();
-            }, 1000);
+            // Load VAPI SDK dynamically
+            (function (d, t) {
+                var g = document.createElement(t),
+                  s = d.getElementsByTagName(t)[0];
+                g.src = "https://cdn.jsdelivr.net/gh/VapiAI/html-script-tag@latest/dist/assets/index.js";
+                g.defer = true;
+                g.async = true;
+                s.parentNode.insertBefore(g, s);
+
+                g.onload = function () {
+                    initializeVAPI();
+                };
+            })(document, "script");
 
             function initializeVAPI() {
                 try {
-                    if (window.Vapi) {
+                    if (window.vapiSDK) {
                         console.log('Initializing VAPI client...');
-                        vapiClient = new window.Vapi(CONFIG.vapi.publicKey);
+                        vapiClient = window.vapiSDK.run({
+                            apiKey: CONFIG.vapi.publicKey,
+                            assistant: CONFIG.vapi.assistantId
+                        });
 
                         // Set up VAPI event listeners
                         vapiClient.on('call-start', () => {
@@ -507,7 +515,7 @@
                         console.log('VAPI client initialized successfully');
 
                     } else {
-                        console.error('VAPI SDK not found - window.Vapi not available');
+                        console.error('VAPI SDK not found - window.vapiSDK not available');
                         elements.voiceStatus.textContent = 'Voice SDK not available';
                         addMessage('system', 'Voice SDK failed to load. Please refresh the page.');
                     }
@@ -676,9 +684,7 @@
                     elements.voiceButton.textContent = 'Connecting...';
                     elements.voiceStatus.textContent = 'Starting call...';
 
-                    vapiClient.start({
-                        assistantId: CONFIG.vapi.assistantId
-                    });
+                    vapiClient.start(CONFIG.vapi.assistantId);
                     console.log('VAPI voice call started');
 
                 } catch (error) {
@@ -748,5 +754,6 @@
 
   </body>
   </html>
+
 
 
