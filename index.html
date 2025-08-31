@@ -454,42 +454,19 @@
                };
 
                // Wait for VAPI SDK to load
-               function waitForVAPISDK() {
-                   return new Promise((resolve) => {
-                       if (window.vapi) {
-                           console.log('VAPI SDK already available');
-                           resolve();
-                           return;
-                       }
-
-                       const checkSDK = setInterval(() => {
-                           if (window.vapi) {
-                               console.log('VAPI SDK loaded successfully');
-                               clearInterval(checkSDK);
-                               resolve();
-                           }
-                       }, 100);
-
-                       // Timeout after 15 seconds
-                       setTimeout(() => {
-                           console.warn('VAPI SDK load timeout after 15 seconds');
-                           clearInterval(checkSDK);
-                           resolve();
-                       }, 15000);
-                   });
-               }
-
-               // Initialize VAPI client after SDK loads
-               setTimeout(async () => {
-                   await waitForVAPISDK();
+               // Initialize VAPI voice after a short delay (matching Shopify version)
+               setTimeout(() => {
                    initializeVAPI();
-               }, 500);
+               }, 1000);
 
                function initializeVAPI() {
                    try {
-                       if (window.vapi) {
+                       if (window.vapiSDK) {
                            console.log('Initializing VAPI client...');
-                           vapiClient = window.vapi(CONFIG.vapi.publicKey);
+                           vapiClient = window.vapiSDK.run({
+                               apiKey: CONFIG.vapi.publicKey,
+                               assistant: CONFIG.vapi.assistantId
+                           });
 
                            // Set up VAPI event listeners
                            vapiClient.on('call-start', () => {
@@ -533,8 +510,8 @@
                            console.log('VAPI client initialized successfully');
 
                        } else {
-                           console.error('VAPI SDK not loaded');
-                           elements.voiceStatus.textContent = 'Voice SDK unavailable';
+                           console.error('VAPI SDK not found');
+                           elements.voiceStatus.textContent = 'Voice SDK not available';
                            addMessage('system', 'Voice SDK failed to load. Please refresh the page.');
                        }
                    } catch (error) {
@@ -702,7 +679,7 @@
                        elements.voiceButton.textContent = 'Connecting...';
                        elements.voiceStatus.textContent = 'Starting call...';
 
-                       await vapiClient.start(CONFIG.vapi.assistantId);
+                       vapiClient.start(CONFIG.vapi.assistantId);
                        console.log('VAPI voice call started');
 
                    } catch (error) {
@@ -772,3 +749,4 @@
 
      </body>
      </html>
+
